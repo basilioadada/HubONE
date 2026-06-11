@@ -2,32 +2,23 @@
 #include <LiquidCrystal_I2C.h>
 #include <Servo.h>
 
-// --- Objetos ---
-LiquidCrystal_I2C lcd(0x27, 16, 2); // Endereço pode ser 0x27 ou 0x3F
+// Configuração do LCD I2C
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+// Servo motor da cancela
 Servo cancela;
 
-// --- Pinos ---
-const int trigPin = 8;
-const int echoPin = 9;
-const int irEntrada = 2; // Sensor IR entrada
-const int irSaida = 3;   // Sensor IR saída
-const int servoPin = 6;
+// Pinos dos sensores
+const int sensorEntrada = 2;   // HW-201 na entrada
+const int sensorContagem = 3;  // IR após a cancela (conta entrada/saída)
 
-// --- Variáveis ---
-long duracao;
-int distancia;
-int vagas = 3; // total de vagas
+// Variáveis de controle
+int vagas = 3;
+bool estadoEntradaAnterior = HIGH;
+bool estadoContagemAnterior = HIGH;
 
-// --- Setup ---
 void setup() {
-  pinMode(trigPin, OUTPUT);
-  pinMode(echoPin, INPUT);
-  pinMode(irEntrada, INPUT);
-  pinMode(irSaida, INPUT);
-
-  cancela.attach(servoPin);
-  cancela.write(0); // posição inicial (fechada)
-
+  // Inicializa LCD
   lcd.init();
   lcd.backlight();
   lcd.setCursor(0,0);
@@ -36,57 +27,57 @@ void setup() {
   lcd.print("Vagas: ");
   lcd.print(vagas);
 
-  Serial.begin(9600); // para testes
+  // Servo
+  cancela.attach(9);
+  cancela.write(0); // cancela fechada
+
+  // Sensores
+  pinMode(sensorEntrada, INPUT);
+  pinMode(sensorContagem, INPUT);
 }
 
-// --- Função para medir distância ---
-int medirDistancia() {
-  digitalWrite(trigPin, LOW);
-  delayMicroseconds(2);
-  digitalWrite(trigPin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPin, LOW);
-
-  duracao = pulseIn(echoPin, HIGH);
-  distancia = duracao * 0.034 / 2; // cm
-  return distancia;
-}
-
-// --- Loop principal ---
 void loop() {
-  int dist = medirDistancia();
+  // Leitura dos sensores
+  int estadoEntrada = digitalRead(sensorEntrada);
+  int estadoContagem = digitalRead(sensorContagem);
 
-  // Veículo detectado na entrada
-  if (dist < 15 && vagas > 0) {
-    cancela.write(90); // abre cancela
-    delay(3000);       // tempo para passar
-    cancela.write(0);  // fecha cancela
+  // --- DETECTA CHEGADA ---
+  if (estadoEntrada == LOW && estadoEntradaAnterior == HIGH && vagas > 0) {
+    abrirCancela();
   }
+  estadoEntradaAnterior = estadoEntrada;
 
-  // Contabiliza entrada
-  // Ajuste: se seu sensor dá HIGH quando detecta, troque LOW por HIGH
-  if (digitalRead(irEntrada) == LOW && vagas > 0) {
-    vagas--;
-    atualizarDisplay();
-    Serial.println("Carro entrou");
-    delay(1000); // debounce
+  // --- CONTABILIZA ENTRADA ---
+  if (estadoContagem == LOW && estadoContagemAnterior == HIGH) {
+    if (vagas > 0) {
+      vagas--;
+      atualizarDisplay();
+      fecharCancela();
+    }
   }
+  estadoContagemAnterior = estadoContagem;
 
-  // Contabiliza saída
-  if (digitalRead(irSaida) == LOW && vagas < 3) {
+  // --- CONTABILIZA SAÍDA ---
+  // Supondo que o mesmo sensor detecta saída (carro passando no sentido inverso)
+  // Aqui simplificamos: se cancela abrir sem vagas, é saída
+  if (estadoEntrada == LOW && estadoEntradaAnterior == HIGH && vagas < 3) {
+    abrirCancela();
+    delay(2000); // tempo para carro passar
     vagas++;
     atualizarDisplay();
-    Serial.println("Carro saiu");
-
-    // abre cancela para saída
-    cancela.write(90);
-    delay(3000);
-    cancela.write(0);
-    delay(1000); // debounce
+    fecharCancela();
   }
 }
 
-// --- Atualiza display ---
+void abrirCancela() {
+  cancela.write(90); // abre cancela
+  delay(2000);       // tempo aberto
+}
+
+void fecharCancela() {
+  cancela.write(0);  // fecha cancela
+}
+
 void atualizarDisplay() {
   lcd.clear();
   lcd.setCursor(0,0);
