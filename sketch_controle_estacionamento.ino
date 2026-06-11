@@ -3,14 +3,14 @@
 #include <Servo.h>
 
 // --- Objetos ---
-LiquidCrystal_I2C lcd(0x27, 16, 2); // Endereço I2C pode variar (0x3F em alguns módulos)
+LiquidCrystal_I2C lcd(0x27, 16, 2); // Endereço pode ser 0x27 ou 0x3F
 Servo cancela;
 
 // --- Pinos ---
 const int trigPin = 8;
 const int echoPin = 9;
-const int irEntrada = 2;
-const int irSaida = 3;
+const int irEntrada = 2; // Sensor IR entrada
+const int irSaida = 3;   // Sensor IR saída
 const int servoPin = 6;
 
 // --- Variáveis ---
@@ -35,6 +35,8 @@ void setup() {
   lcd.setCursor(0,1);
   lcd.print("Vagas: ");
   lcd.print(vagas);
+
+  Serial.begin(9600); // para testes
 }
 
 // --- Função para medir distância ---
@@ -62,9 +64,11 @@ void loop() {
   }
 
   // Contabiliza entrada
+  // Ajuste: se seu sensor dá HIGH quando detecta, troque LOW por HIGH
   if (digitalRead(irEntrada) == LOW && vagas > 0) {
     vagas--;
     atualizarDisplay();
+    Serial.println("Carro entrou");
     delay(1000); // debounce
   }
 
@@ -72,6 +76,8 @@ void loop() {
   if (digitalRead(irSaida) == LOW && vagas < 3) {
     vagas++;
     atualizarDisplay();
+    Serial.println("Carro saiu");
+
     // abre cancela para saída
     cancela.write(90);
     delay(3000);
