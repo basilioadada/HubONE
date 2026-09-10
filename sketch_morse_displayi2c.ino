@@ -36,7 +36,7 @@ void setup() {
 
   // Segunda linha fixa
   lcd.setCursor(0,1);
-  lcd.print("Prof Basilio Adada");
+  lcd.print("Pf Basilio Adada");
 }
 
 void loop() {
