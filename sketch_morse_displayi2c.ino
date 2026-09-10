@@ -32,11 +32,11 @@ void setup() {
 
   // Primeira linha inicial
   lcd.setCursor(0,0);
-  lcd.print("Morse HUbONE");
+  lcd.print("Codigo Morse");
 
   // Segunda linha fixa
   lcd.setCursor(0,1);
-  lcd.print("Pf Basilio Adada");
+  lcd.print("Prof Basilio Adada");
 }
 
 void loop() {
@@ -75,7 +75,7 @@ void loop() {
 
     // Mantém a segunda linha fixa
     lcd.setCursor(0,1);
-    lcd.print("Prof Basilio Adada");
+    lcd.print("Pf Basilio Adada");
 
     morse = "";
   }
@@ -89,7 +89,7 @@ void loop() {
 
     // Mantém a segunda linha fixa
     lcd.setCursor(0,1);
-    lcd.print("Prof Basilio Adada");
+    lcd.print("Pf Basilio Adada");
 
     ultimaAcao = millis();
   }
