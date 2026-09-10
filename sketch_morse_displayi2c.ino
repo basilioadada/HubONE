@@ -1,7 +1,7 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 
-LiquidCrystal_I2C lcd(0x27, 16, 2); // Endereço I2C pode variar
+LiquidCrystal_I2C lcd(0x27, 16, 2); // Endereço pode ser 0x27 ou 0x3F
 
 const int botao = 2;
 const int buzzer = 8;
@@ -13,7 +13,7 @@ unsigned long ultimaAcao;
 String morse = "";
 String mensagem = "";
 
-// Tabela Morse simplificada
+// Tabela Morse simplificada (A–Z)
 String letras[] = {".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..",
                    ".---", "-.-", ".-..", "--", "-.", "---", ".--.", "--.-", ".-.",
                    "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.."};
@@ -29,8 +29,14 @@ void setup() {
 
   lcd.init();
   lcd.backlight();
+
+  // Primeira linha inicial
   lcd.setCursor(0,0);
-  lcd.print("Codigo Morse");
+  lcd.print("Morse HUbONE");
+
+  // Segunda linha fixa
+  lcd.setCursor(0,1);
+  lcd.print("Pf Basilio Adada");
 }
 
 void loop() {
@@ -55,7 +61,7 @@ void loop() {
     ultimaAcao = millis();
   }
 
-  // Detecta pausa entre letras
+  // Pausa entre letras
   if (morse.length() > 0 && millis() - ultimaAcao > 1000) {
     for (int i=0; i<26; i++) {
       if (morse == letras[i]) {
@@ -66,16 +72,25 @@ void loop() {
     lcd.clear();
     lcd.setCursor(0,0);
     lcd.print(mensagem);
+
+    // Mantém a segunda linha fixa
+    lcd.setCursor(0,1);
+    lcd.print("Prof Basilio Adada");
+
     morse = "";
   }
 
-  // Detecta pausa longa entre palavras
+  // Pausa longa entre palavras
   if (mensagem.length() > 0 && millis() - ultimaAcao > 3000) {
     mensagem += " ";
     lcd.clear();
     lcd.setCursor(0,0);
     lcd.print(mensagem);
+
+    // Mantém a segunda linha fixa
+    lcd.setCursor(0,1);
+    lcd.print("Prof Basilio Adada");
+
     ultimaAcao = millis();
   }
 }
-
